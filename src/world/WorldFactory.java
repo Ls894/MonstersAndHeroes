@@ -131,6 +131,11 @@ public class WorldFactory {
         return new World(tiles);
     }
 
+
+
+
+
+
     private Market createMarket() throws IOException {
 
         // Give each market fresh items.
@@ -240,5 +245,47 @@ public class WorldFactory {
         }
 
         return reached == accessibleCount;
+    }
+
+
+    //Map Creation
+    public World createValorWorld() {
+        final int size = 8;
+        Tile[][] tiles = new Tile[size][size];
+
+        //Randomly generate terrain using a ratio of 14:6:6:6:4.
+        List<TileType> terrainTypes = new ArrayList<>();
+        terrainTypes.addAll(Collections.nCopies(14, TileType.PLAIN));
+        terrainTypes.addAll(Collections.nCopies(6, TileType.BUSH));
+        terrainTypes.addAll(Collections.nCopies(6, TileType.CAVE));
+        terrainTypes.addAll(Collections.nCopies(6, TileType.KOULOU));
+        terrainTypes.addAll(Collections.nCopies(4, TileType.OBSTACLE));
+        Collections.shuffle(terrainTypes, random);
+
+        Market heroMarket;
+        try {
+            heroMarket = createMarket();
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not load Valor market items.", e);
+        }
+
+        int terrainIndex = 0;
+
+        for (int row = 0; row < size; row++) {
+            for (int col = 0; col < size; col++) {
+                if (col == 2 || col == 5) {
+                    tiles[row][col] = new InaccessibleTile();
+                } else if (row == 0) {
+                    tiles[row][col] = new NexusTile();
+                } else if (row == size - 1) {
+                    tiles[row][col] = new NexusTile(heroMarket);
+                } else {
+                    tiles[row][col] = new TerrainTile(terrainTypes.get(terrainIndex));
+                    terrainIndex++;
+                }
+            }
+        }
+
+        return new World(tiles);
     }
 }

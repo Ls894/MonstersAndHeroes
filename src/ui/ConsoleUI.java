@@ -16,12 +16,12 @@ import item.Potion;
 import item.Spell;
 import item.Weapon;
 import market.Market;
+import world.Position;
+import world.World;
 
 // Console UI.
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class ConsoleUI {
 
@@ -105,6 +105,50 @@ public class ConsoleUI {
         }
 
         return selected;
+    }
+    public static String renderBoard(World world) {
+        Map<Position, String> actorLabels = new HashMap<>();
+
+        List<Hero> heroes = world.getRegisteredHeroes();
+        for (int i = 0; i < heroes.size(); i++) {
+            String label = "H" + (i + 1);
+            world.positionOf(heroes.get(i)).ifPresent(position -> actorLabels.put(position, label));
+        }
+
+        List<Monster> monsters = world.getMonstersOnBoard();
+        for (int i = 0; i < monsters.size(); i++) {
+            String label = "M" + (i + 1);
+            world.positionOf(monsters.get(i)).ifPresent(position -> actorLabels.merge(position, label, (heroLabel, monsterLabel) -> heroLabel + "/" + monsterLabel));
+        }
+
+        int size = world.getSize();
+        int cellWidth = 7;
+        String border = ("+" + "=".repeat(cellWidth)).repeat(size) + "+";
+        String newline = System.lineSeparator();
+        StringBuilder board = new StringBuilder(border);
+
+        for (int row = 0; row < size; row++) {
+            board.append(newline).append('|');
+
+            for (int col = 0; col < size; col++) {
+                Position position = new Position(row, col);
+                String label = actorLabels.get(position);
+                if (label == null) {
+                    label = String.valueOf(world.getTileType(position).getSymbol());
+                }
+
+                int padding = cellWidth - label.length();
+                int leftPadding = padding / 2;
+                board.append(" ".repeat(leftPadding))
+                        .append(label)
+                        .append(" ".repeat(padding - leftPadding))
+                        .append('|');
+            }
+
+            board.append(newline).append(border);
+        }
+
+        return board.toString();
     }
 
     private static int readInitialNumber(

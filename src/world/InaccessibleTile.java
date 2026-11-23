@@ -12,4 +12,9 @@ public class InaccessibleTile extends Tile {
     public char getSymbol() {
         return '#';
     }
+
+    @Override
+    public TileType getType() {
+        return TileType.INACCESSIBLE;
+    }
 }

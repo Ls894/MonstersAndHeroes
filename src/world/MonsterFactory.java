@@ -55,13 +55,7 @@ public class MonsterFactory {
         List<Monster> encounter = new ArrayList<>();
 
         for (int i = 0; i < heroes.size(); i++) {
-            Monster template = templates.get(
-                    random.nextInt(templates.size())
-            );
-
-            encounter.add(
-                    createScaledMonster(template, targetLevel)
-            );
+            encounter.add(createMonster(targetLevel));
         }
 
         return encounter;
@@ -101,5 +95,11 @@ public class MonsterFactory {
         throw new IllegalArgumentException(
                 "Unsupported monster type."
         );
+    }
+
+    // Creates one random monster at the requested level.
+    public Monster createMonster(int level) {
+        Monster template = templates.get(random.nextInt(templates.size()));
+        return createScaledMonster(template, level);
     }
 }

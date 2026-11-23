@@ -4,4 +4,8 @@ package world;
 public abstract class Tile {
     public abstract boolean isAccessible();
     public abstract char getSymbol();
+
+    public TileType getType() {
+        return TileType.PLAIN;
+    }
 }
