@@ -6,14 +6,15 @@ import inventory.Equipment;
 import item.Armor;
 import item.Spell;
 import item.Weapon;
+import world.TileType;
 
 // Combat rules.
-
 import java.util.Random;
 
 public final class CombatRules {
 
     // Fields
+    private static final double TERRAIN_MULTIPLIER = 1.10;
     private static final double ATTRIBUTE_SCALE = 10000.0;
     private static final double TWO_HAND_BONUS = 1.20;
 
@@ -31,6 +32,11 @@ public final class CombatRules {
             Hero attacker,
             Weapon weapon,
             Monster target) {
+        return calculatePhysicalDamage(attacker, weapon, target, TileType.PLAIN);
+    }
+
+    public static double calculatePhysicalDamage(
+            Hero attacker, Weapon weapon, Monster target, TileType terrain) {
 
         if (attacker == null || target == null) {
             throw new IllegalArgumentException(
@@ -38,11 +44,12 @@ public final class CombatRules {
             );
         }
 
+        double strength = effectiveStrength(attacker, terrain);
         double baseDamage;
 
         if (weapon == null) {
             // Unarmed attack
-            baseDamage = attacker.getStrength() / 10.0;
+            baseDamage = strength / 10.0;
         } else {
             if (!weapon.isUsable()) {
                 throw new IllegalArgumentException(
@@ -61,7 +68,7 @@ public final class CombatRules {
         }
 
         double rawDamage = baseDamage
-                * (1.0 + attacker.getStrength() / ATTRIBUTE_SCALE);
+                * (1.0 + strength / ATTRIBUTE_SCALE);
 
         // Apply proportional monster defense.
         return applyDefense(rawDamage, target.getDefense());
@@ -72,6 +79,11 @@ public final class CombatRules {
             Hero caster,
             Spell spell,
             Monster target) {
+        return calculateSpellDamage(caster, spell, target, TileType.PLAIN);
+    }
+
+    public static double calculateSpellDamage(
+            Hero caster, Spell spell, Monster target, TileType terrain) {
 
         if (caster == null || spell == null || target == null) {
             throw new IllegalArgumentException(
@@ -80,7 +92,7 @@ public final class CombatRules {
         }
 
         double rawDamage = spell.getDamage()
-                * (1.0 + caster.getDexterity() / ATTRIBUTE_SCALE);
+                * (1.0 + effectiveDexterity(caster, terrain) / ATTRIBUTE_SCALE);
 
         // Apply proportional monster defense.
         return applyDefense(rawDamage, target.getDefense());
@@ -111,6 +123,10 @@ public final class CombatRules {
 
     // Hero dodge.
     public static double getHeroDodgeProbability(Hero hero) {
+        return getHeroDodgeProbability(hero, TileType.PLAIN);
+    }
+
+    public static double getHeroDodgeProbability(Hero hero, TileType terrain) {
         if (hero == null) {
             throw new IllegalArgumentException(
                     "Hero cannot be null."
@@ -118,7 +134,7 @@ public final class CombatRules {
         }
 
         return clampProbability(
-                hero.getAgility() * HERO_DODGE_SCALE
+                effectiveAgility(hero, terrain) * HERO_DODGE_SCALE
         );
     }
 
@@ -150,6 +166,18 @@ public final class CombatRules {
         }
 
         return random.nextDouble() < probability;
+    }
+
+    public static double effectiveStrength(Hero hero, TileType terrain) {
+        return hero.getStrength() * (terrain == TileType.KOULOU ? TERRAIN_MULTIPLIER : 1.0);
+    }
+
+    public static double effectiveDexterity(Hero hero, TileType terrain) {
+        return hero.getDexterity() * (terrain == TileType.BUSH ? TERRAIN_MULTIPLIER : 1.0);
+    }
+
+    public static double effectiveAgility(Hero hero, TileType terrain) {
+        return hero.getAgility() * (terrain == TileType.CAVE ? TERRAIN_MULTIPLIER : 1.0);
     }
 
     // Defense reduces damage but never makes it negative.

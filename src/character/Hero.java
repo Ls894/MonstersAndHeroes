@@ -1,6 +1,5 @@
 package character;
 
-import battle.Battle;
 import inventory.Equipment;
 import inventory.Inventory;
 import item.Item;
@@ -71,6 +70,9 @@ public abstract class Hero extends Character {
     }
     public double getMp() {
         return mp;
+    }
+    public double getMaxHp() {
+        return getLevel() * 100.0;
     }
     public double getBaseMp() {
         return baseMp;
@@ -169,10 +171,13 @@ public abstract class Hero extends Character {
     }
 
     private void levelUp() {
+        boolean alive = isAlive();
         setLevel(getLevel() + 1);
 
         // Reset HP according to the new level.
-        setHp(getLevel() * 100.0);
+        if (alive) {
+            setHp(getMaxHp());
+        }
 
         // Increase current MP and revival MP baseline.
         mp *= 1.10;
@@ -203,20 +208,17 @@ public abstract class Hero extends Character {
             return;
         }
 
-        // Regain 10% of current HP.
-        double hpRecovery = getHp() * 0.10;
+        // Recover 10% of maximum resources without exceeding the baseline.
+        // Existing potion boosts above the baseline are not removed.
+        restoreHp(Math.min(getMaxHp() * 0.10, Math.max(0, getMaxHp() - getHp())));
+        restoreMp(Math.min(baseMp * 0.10, Math.max(0, baseMp - mp)));
+    }
 
-        if (Double.isFinite(hpRecovery)
-                && Double.isFinite(getHp() + hpRecovery)) {
-            restoreHp(hpRecovery);
-        }
-
-        // Regain 10% of current MP.
-        double mpRecovery = mp * 0.10;
-
-        if (Double.isFinite(mpRecovery)
-                && Double.isFinite(mp + mpRecovery)) {
-            restoreMp(mpRecovery);
+    // Valor revival: call only after successful placement at the original Nexus.
+    public void reviveAtNexus() {
+        if (!isAlive()) {
+            setHp(getMaxHp());
+            mp = baseMp;
         }
     }
 

@@ -17,8 +17,6 @@ import java.util.Scanner;
 // Loads game data and starts the console UI.
 public class Main {
 
-    private static final int WORLD_SIZE = 8;
-
     public static void main(String[] args) {
 
         Path dataPath = args.length > 0
@@ -41,7 +39,9 @@ public class Main {
                     scanner, candidates
             );
 
-            // Prepare random monster encounters.
+            List<Integer> lanes = ConsoleUI.selectLanes(scanner, party);
+
+            // Prepare monster waves.
             MonsterFactory monsterFactory =
                     new MonsterFactory(
                             monsterTemplates, random
@@ -51,16 +51,15 @@ public class Main {
             WorldFactory worldFactory =
                     new WorldFactory(loader, random);
 
-            World world = worldFactory.createWorld(
-                    WORLD_SIZE
-            );
+            World world = worldFactory.createValorWorld();
 
             // Initialize game state.
             Game game = new Game(
                     world,
                     party,
                     monsterFactory,
-                    random
+                    random,
+                    lanes
             );
 
             // Start the game loop.
